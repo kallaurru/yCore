@@ -1,3 +1,3 @@
-module github.com/kallaurru/yCore
+module github.com/kallaurru/ycore
 
 go 1.16
