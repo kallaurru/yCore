@@ -76,7 +76,16 @@ const (
 	CaseTypeCategory uint32 = 0x10
 )
 
-type ComplexRule Rule
+type ComplexRule uint32
+
+// IsValidComplexRuleElement проверка на валидность входящих данных
+func IsValidComplexRuleElement(value uint32) bool {
+	allElements := NumbersIsChanges | NumbersIsSingle | NumbersIsPlural |
+		GenusIsChanges | GenusFemale | GenusMale | GenusMiddle | GenusCommon |
+		PersonIsChanges | PersonFirst | PersonSecond | PersonThird |
+		CaseIsChanges | CaseNom | CaseGen | CaseDat | CaseAcc | CaseIns | CasePre
+	return allElements&value > 0
+}
 
 // MakeComplexRule желательно передавать данные полученные из констант
 func MakeComplexRule(
