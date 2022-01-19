@@ -17,12 +17,7 @@ func MakeNewRulesManager(vf ValidRuleElementFunc) *RulesManager {
 }
 
 func (rm *RulesManager) isValid(value uint32) bool {
-	res := rm.vf(value)
-	if res == false {
-		return res
-	}
-	rm.value |= value
-	return true
+	return rm.vf(value)
 }
 
 func (rm *RulesManager) isValidPos(pos int) bool {
@@ -38,7 +33,7 @@ func (rm *RulesManager) IsSet(pos int) bool {
 		return false
 	}
 
-	return (rm.value & 1 << pos) > 0
+	return (rm.value & (1 << pos)) > 0
 }
 
 func (rm *RulesManager) SetByte(pos int) {

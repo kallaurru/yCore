@@ -1,45 +1,43 @@
 package rule
 
 const (
-	/* младший байт категория числа и категория рода */
+	/* младший байт занимаем под флаги изменчивости по категориям и доп флаги */
 
 	// NumbersIsChanges изменяется по числам
 	NumbersIsChanges uint32 = 0x01
-	// NumbersIsSingle единственное число
-	NumbersIsSingle uint32 = 0x02
-	// NumbersIsPlural множественное число
-	NumbersIsPlural uint32 = 0x04
-
-	/* категория рода */
-
 	// GenusIsChanges измеряется по родам
-	GenusIsChanges uint32 = 0x08
-	// GenusFemale женский
-	GenusFemale uint32 = 0x10
-	// GenusMale мужской
-	GenusMale uint32 = 0x20
-	// GenusMiddle средний
-	GenusMiddle uint32 = 0x40
-	// GenusCommon Общий
-	GenusCommon uint32 = 0x80
+	GenusIsChanges uint32 = 0x02
+	// PersonIsChanges изменяется по лицам
+	PersonIsChanges uint32 = 0x04
+	// CaseIsChanges изменяется по падежам
+	CaseIsChanges uint32 = 0x08
+	// TimeIsChanges изменяется по категории времени
+	TimeIsChanges uint32 = 0x10
+	// WordHasHomonym у слова есть омонимы
+	WordHasHomonym uint32 = 0x20
+	// Reserved-1 0x40
+	// Reserved-2 0x80
 
 	/* второй байт категория лица и времени */
 
+	/* категория числа */
+
+	// NumbersIsSingle единственное число
+	NumbersIsSingle uint32 = 0x01
+	// NumbersIsPlural множественное число
+	NumbersIsPlural uint32 = 0x02
+
 	/* категория лица */
 
-	// PersonIsChanges изменяется по лицам
-	PersonIsChanges uint32 = 0x01
 	// PersonFirst 1-ое лицо
-	PersonFirst uint32 = 0x02
+	PersonFirst uint32 = 0x04
 	// PersonSecond 2-ое лицо
-	PersonSecond uint32 = 0x04
+	PersonSecond uint32 = 0x08
 	// PersonThird 3-e лицо
-	PersonThird uint32 = 0x08
+	PersonThird uint32 = 0x10
 
 	/* категория времени */
 
-	// TimeIsChanges изменяется по категории времени
-	TimeIsChanges uint32 = 0x10
 	// TimeFuture будущее время
 	TimeFuture uint32 = 0x20
 	// TimePresent настоящее время
@@ -49,8 +47,22 @@ const (
 
 	/* Третий байт категория падежа */
 
-	// CaseIsChanges изменяется по падежам
-	CaseIsChanges uint32 = 0x01
+	/* категория рода */
+
+	// GenusFemale женский
+	GenusFemale uint32 = 0x01
+	// GenusMale мужской
+	GenusMale uint32 = 0x02
+	// GenusMiddle средний
+	GenusMiddle uint32 = 0x04
+	// GenusCommon Общий
+	GenusCommon uint32 = 0x08
+	// Reserved 0x10, 0x20, 0x40, 0x80
+
+	/* Четвертый байт категория падежа */
+
+	/* категория падежа */
+
 	// CaseNom именительный падеж
 	CaseNom uint32 = 0x02
 	// CaseGen родительный падеж
@@ -78,17 +90,9 @@ const (
 
 type ComplexRule uint32
 
-// IsValidComplexRuleElement проверка на валидность входящих данных
-func IsValidComplexRuleElement(value uint32) bool {
-	allElements := NumbersIsChanges | NumbersIsSingle | NumbersIsPlural |
-		GenusIsChanges | GenusFemale | GenusMale | GenusMiddle | GenusCommon |
-		PersonIsChanges | PersonFirst | PersonSecond | PersonThird |
-		CaseIsChanges | CaseNom | CaseGen | CaseDat | CaseAcc | CaseIns | CasePre
-	return allElements&value > 0
-}
-
 // MakeComplexRule желательно передавать данные полученные из констант
 func MakeComplexRule(
+	categoryFlags uint32,
 	numberBytes uint32,
 	genusBytes uint32,
 	personBytes uint32,
@@ -96,34 +100,25 @@ func MakeComplexRule(
 	caseBytes uint32,
 ) ComplexRule {
 
-	var cr ComplexRule = 0
-	cr |= ComplexRule(numberBytes & NumbersIsChanges)
-	cr |= ComplexRule(numberBytes & NumbersIsSingle)
-	cr |= ComplexRule(numberBytes & NumbersIsPlural)
+	var (
+		cr ComplexRule = 0
+	)
+	cr |= ComplexRule(categoryFlags & getChangingFlagsMask())
 
-	cr |= ComplexRule(genusBytes & GenusIsChanges)
-	cr |= ComplexRule(genusBytes & GenusFemale)
-	cr |= ComplexRule(genusBytes & GenusMale)
-	cr |= ComplexRule(genusBytes & GenusMiddle)
-	cr |= ComplexRule(genusBytes & GenusCommon)
+	diff := getDiffBytes(NumbersTypeCategory)
+	cr |= ComplexRule((numberBytes & getNumbersMask()) << diff)
 
-	cr |= ComplexRule((personBytes & PersonIsChanges) << 8)
-	cr |= ComplexRule((personBytes & PersonFirst) << 8)
-	cr |= ComplexRule((personBytes & PersonSecond) << 8)
-	cr |= ComplexRule((personBytes & PersonThird) << 8)
+	diff = getDiffBytes(PersonTypeCategory)
+	cr |= ComplexRule((personBytes & getPersonsMask()) << diff)
 
-	cr |= ComplexRule((timeBytes & TimeIsChanges) << 8)
-	cr |= ComplexRule((timeBytes & TimeFuture) << 8)
-	cr |= ComplexRule((timeBytes & TimePresent) << 8)
-	cr |= ComplexRule((timeBytes & TimePast) << 8)
+	diff = getDiffBytes(TimeTypeCategory)
+	cr |= ComplexRule((timeBytes & getTimeMask()) << diff)
 
-	cr |= ComplexRule((caseBytes & CaseIsChanges) << 1)
-	cr |= ComplexRule((caseBytes & CaseNom) << 16)
-	cr |= ComplexRule((caseBytes & CaseGen) << 16)
-	cr |= ComplexRule((caseBytes & CaseDat) << 16)
-	cr |= ComplexRule((caseBytes & CaseAcc) << 16)
-	cr |= ComplexRule((caseBytes & CaseIns) << 16)
-	cr |= ComplexRule((caseBytes & CasePre) << 16)
+	diff = getDiffBytes(GenusTypeCategory)
+	cr |= ComplexRule(genusBytes & getGenusMask() << diff)
+
+	diff = getDiffBytes(CaseTypeCategory)
+	cr |= ComplexRule((caseBytes & getCaseMask()) << diff)
 
 	return cr
 }
@@ -131,95 +126,78 @@ func MakeComplexRule(
 func (cr ComplexRule) SetIsNumberChanging() ComplexRule {
 	return cr | ComplexRule(NumbersIsChanges)
 }
-
-func (cr ComplexRule) SetNumbersIsSingle() ComplexRule {
-	return cr | ComplexRule(NumbersIsSingle)
-}
-
-func (cr ComplexRule) SetNumbersIsPlural() ComplexRule {
-	return cr | ComplexRule(NumbersIsPlural)
-}
-
 func (cr ComplexRule) SetIsGenusChanging() ComplexRule {
 	return cr | ComplexRule(GenusIsChanges)
 }
+func (cr ComplexRule) SetIsPersonChanging() ComplexRule {
+	return cr | ComplexRule(PersonIsChanges)
+}
+func (cr ComplexRule) SetIsTimeChanging() ComplexRule {
+	return cr | ComplexRule(TimeIsChanges)
+}
+func (cr ComplexRule) SetIsCaseChanging() ComplexRule {
+	return cr | ComplexRule(CaseIsChanges)
+}
+func (cr ComplexRule) SetHasHomonym() ComplexRule {
+	return cr | ComplexRule(WordHasHomonym)
+}
+
+func (cr ComplexRule) SetNumbersIsSingle() ComplexRule {
+	return cr | ComplexRule(NumbersIsSingle<<getDiffBytes(NumbersTypeCategory))
+}
+func (cr ComplexRule) SetNumbersIsPlural() ComplexRule {
+	return cr | ComplexRule(NumbersIsPlural<<getDiffBytes(NumbersTypeCategory))
+}
+func (cr ComplexRule) SetPeronFirst() ComplexRule {
+	return cr | ComplexRule(PersonFirst<<getDiffBytes(PersonTypeCategory))
+}
+func (cr ComplexRule) SetPersonSecond() ComplexRule {
+	return cr | ComplexRule(PersonSecond<<getDiffBytes(PersonTypeCategory))
+}
+func (cr ComplexRule) SetPersonThird() ComplexRule {
+	return cr | ComplexRule(PersonThird<<getDiffBytes(PersonTypeCategory))
+}
+func (cr ComplexRule) SetTimeFuture() ComplexRule {
+	return cr | ComplexRule(TimeFuture<<getDiffBytes(TimeTypeCategory))
+}
+func (cr ComplexRule) SetTimePresent() ComplexRule {
+	return cr | ComplexRule(TimePresent<<getDiffBytes(TimeTypeCategory))
+}
+func (cr ComplexRule) SetTimePast() ComplexRule {
+	return cr | ComplexRule(TimePast<<getDiffBytes(TimeTypeCategory))
+}
 
 func (cr ComplexRule) SetGenusFemale() ComplexRule {
-	return cr | ComplexRule(GenusFemale)
+	return cr | ComplexRule(GenusFemale<<getDiffBytes(GenusTypeCategory))
 }
 
 func (cr ComplexRule) SetGenusMale() ComplexRule {
-	return cr | ComplexRule(GenusMale)
+	return cr | ComplexRule(GenusMale<<getDiffBytes(GenusTypeCategory))
 }
 
 func (cr ComplexRule) SetGenusMiddle() ComplexRule {
-	return cr | ComplexRule(GenusMiddle)
+	return cr | ComplexRule(GenusMiddle<<getDiffBytes(GenusTypeCategory))
 }
 
 func (cr ComplexRule) SetGenusCommon() ComplexRule {
-	return cr | ComplexRule(GenusCommon)
-}
-
-// второй байт. Делаем сдвиг на 8
-
-func (cr ComplexRule) SetIsPersonChanging() ComplexRule {
-	return cr | ComplexRule(PersonIsChanges<<8)
-}
-
-func (cr ComplexRule) SetPeronFirst() ComplexRule {
-	return cr | ComplexRule(PersonFirst<<8)
-}
-
-func (cr ComplexRule) SetPersonSecond() ComplexRule {
-	return cr | ComplexRule(PersonSecond<<8)
-}
-
-func (cr ComplexRule) SetPersonThird() ComplexRule {
-	return cr | ComplexRule(PersonThird<<8)
-}
-
-func (cr ComplexRule) SetIsTimeChanging() ComplexRule {
-	return cr | ComplexRule(TimeIsChanges<<8)
-}
-
-func (cr ComplexRule) SetTimeFuture() ComplexRule {
-	return cr | ComplexRule(TimeFuture<<8)
-}
-
-func (cr ComplexRule) SetTimePresent() ComplexRule {
-	return cr | ComplexRule(TimePresent<<8)
-}
-
-func (cr ComplexRule) SetTimePast() ComplexRule {
-	return cr | ComplexRule(TimePast<<8)
-}
-
-/** Третий байт сдвигаем на 16 */
-
-func (cr ComplexRule) SetIsCaseChanging() ComplexRule {
-	return cr | ComplexRule(CaseIsChanges<<16)
+	return cr | ComplexRule(GenusCommon<<getDiffBytes(GenusTypeCategory))
 }
 
 func (cr ComplexRule) SetCaseNom() ComplexRule {
-	return cr | ComplexRule(CaseNom<<16)
+	return cr | ComplexRule(CaseNom<<getDiffBytes(CaseTypeCategory))
 }
-
 func (cr ComplexRule) SetCaseGen() ComplexRule {
-	return cr | ComplexRule(CaseGen<<16)
+	return cr | ComplexRule(CaseGen<<getDiffBytes(CaseTypeCategory))
 }
-
 func (cr ComplexRule) SetCaseDat() ComplexRule {
-	return cr | ComplexRule(CaseDat<<16)
+	return cr | ComplexRule(CaseDat<<getDiffBytes(CaseTypeCategory))
 }
-
 func (cr ComplexRule) SetCaseAcc() ComplexRule {
-	return cr | ComplexRule(CaseAcc<<16)
+	return cr | ComplexRule(CaseAcc<<getDiffBytes(CaseTypeCategory))
 }
-
 func (cr ComplexRule) SetCaseIns() ComplexRule {
-	return cr | ComplexRule(CaseIns<<16)
+	return cr | ComplexRule(CaseIns<<getDiffBytes(CaseTypeCategory))
 }
-
 func (cr ComplexRule) SetCasePre() ComplexRule {
-	return cr | ComplexRule(CasePre<<16)
+	return cr | ComplexRule(CasePre<<getDiffBytes(CaseTypeCategory))
 }
