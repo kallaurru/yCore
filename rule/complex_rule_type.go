@@ -15,7 +15,8 @@ const (
 	TimeIsChanges uint32 = 0x10
 	// WordHasHomonym у слова есть омонимы
 	WordHasHomonym uint32 = 0x20
-	// Reserved-1 0x40
+	// IsInfinitive признак формы глагола инфинитив
+	IsInfinitive uint32 = 0x40
 	// Reserved-2 0x80
 
 	/* второй байт категория лица и времени */
@@ -140,6 +141,10 @@ func (cr ComplexRule) SetIsCaseChanging() ComplexRule {
 }
 func (cr ComplexRule) SetHasHomonym() ComplexRule {
 	return cr | ComplexRule(WordHasHomonym)
+}
+
+func (cr ComplexRule) SetIsInfinitive() ComplexRule {
+	return cr | ComplexRule(IsInfinitive)
 }
 
 func (cr ComplexRule) SetNumbersIsSingle() ComplexRule {
