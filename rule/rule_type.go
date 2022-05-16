@@ -1,39 +1,60 @@
 package rule
 
-type Rule uint32
+// RulesManager можно собрать правильные значения и выгрузить линейку
+type RulesManager struct {
+	value uint32
+	vf    ValidRuleElementFunc
+}
 
 // ValidRuleElementFunc функция контроля входных данных.
 type ValidRuleElementFunc func(value uint32) bool
 
-type Rules interface {
-	IsSet(pos int) bool
-	SetByte(pos int) Rule
-	IsValid(value uint32, validateFunc ValidRuleElementFunc) bool
-	AddData(value uint32) Rule
+func MakeNewRulesManager(vf ValidRuleElementFunc) *RulesManager {
+	return &RulesManager{
+		vf:    vf,
+		value: 0,
+	}
 }
 
-//IsSet проверка установлен ли данный бит
-func (r Rule) IsSet(pos int) bool {
+func (rm *RulesManager) isValid(value uint32) bool {
+	return rm.vf(value)
+}
+
+func (rm *RulesManager) isValidPos(pos int) bool {
 	if pos < 0 || pos > 31 {
 		return false
 	}
-	return (r & 1 << pos) > 0
+	return true
 }
 
-//SetByte установить позицию в линейке
-func (r Rule) SetByte(pos int) Rule {
-	if pos < 0 || pos > 31 {
-		return r
+func (rm *RulesManager) IsSet(pos int) bool {
+	isValid := rm.isValidPos(pos)
+	if !isValid {
+		return false
 	}
-	return r | Rule(1<<pos)
+
+	return (rm.value & (1 << pos)) > 0
 }
 
-//AddData добавить данные в линейку
-func (r Rule) AddData(value uint32) Rule {
-	return r | Rule(value)
+func (rm *RulesManager) SetByte(pos int) {
+	isValid := rm.isValidPos(pos)
+	if !isValid {
+		return
+	}
+	newValue := uint32(1 << pos)
+	if rm.isValid(newValue) == false {
+		return
+	}
+	rm.value |= newValue
 }
 
-//IsValid проверка на валидность входящих данных для текущей линейки
-func (r Rule) IsValid(value uint32, validateFunc ValidRuleElementFunc) bool {
-	return validateFunc(value)
+func (rm *RulesManager) AddData(value uint32) {
+	if rm.isValid(value) == false {
+		return
+	}
+	rm.value |= value
+}
+
+func (rm *RulesManager) ToUint32() uint32 {
+	return rm.value
 }
