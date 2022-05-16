@@ -23,6 +23,7 @@ const (
 
 //IsValidPaosElement проверка на валидность входящих данных
 func IsValidPaosElement(value uint32) bool {
-	allPaOS := NounPaOS | AdjectivePaOS | VerbPaOS | ParticiplePaOS | GerundPaOS | AdverbPaOS | PretextPaOS | PronounPaOS | UnionPaOS
-	return allPaOS&value > 0
+	allPaOS := NounPaOS | AdjectivePaOS | VerbPaOS | ParticiplePaOS |
+		GerundPaOS | AdverbPaOS | PretextPaOS | PronounPaOS | UnionPaOS
+	return (allPaOS & value) > 0
 }
