@@ -62,20 +62,27 @@ const (
 
 	/* Четвертый байт категория падежа */
 
+	/* действительное и страдательное причастие */
+
+	// PledgeActive - действительный залог причастий
+	PledgeActive uint32 = 0x01
+	// PledgePassive - страдательное причастие
+	PledgePassive uint32 = 0x02
+
 	/* категория падежа */
 
 	// CaseNom именительный падеж
-	CaseNom uint32 = 0x02
+	CaseNom uint32 = 0x04
 	// CaseGen родительный падеж
-	CaseGen uint32 = 0x04
+	CaseGen uint32 = 0x08
 	// CaseDat дательный падеж
-	CaseDat uint32 = 0x08
+	CaseDat uint32 = 0x10
 	// CaseAcc винительный падеж
-	CaseAcc uint32 = 0x10
+	CaseAcc uint32 = 0x20
 	// CaseIns творительный падеж
-	CaseIns uint32 = 0x20
+	CaseIns uint32 = 0x40
 	// CasePre предложный падеж
-	CasePre uint32 = 0x40
+	CasePre uint32 = 0x80
 
 	// NumbersTypeCategory категория числа
 	NumbersTypeCategory uint32 = 0x01
