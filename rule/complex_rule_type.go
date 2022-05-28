@@ -46,9 +46,7 @@ const (
 	// TimePast прошедшее время
 	TimePast uint32 = 0x80
 
-	/* Третий байт категория падежа */
-
-	/* категория рода */
+	/* Третий байт категория рода */
 
 	// GenusFemale женский
 	GenusFemale uint32 = 0x01
@@ -98,6 +96,10 @@ const (
 
 type ComplexRule uint32
 
+func MakeEmptyComplexRule() ComplexRule {
+	return MakeComplexRule(0, 0, 0, 0, 0, 0)
+}
+
 // MakeComplexRule желательно передавать данные полученные из констант
 func MakeComplexRule(
 	categoryFlags uint32,
@@ -131,21 +133,27 @@ func MakeComplexRule(
 	return cr
 }
 
-func (cr ComplexRule) SetIsNumberChanging() ComplexRule {
+func (cr ComplexRule) OnNumbersChanging() ComplexRule {
 	return cr | ComplexRule(NumbersIsChanges)
 }
-func (cr ComplexRule) SetIsGenusChanging() ComplexRule {
+
+func (cr ComplexRule) OffNumbersChanging() ComplexRule {
+	return cr & ComplexRule(^NumbersIsChanges)
+}
+
+func (cr ComplexRule) OnGenusChanging() ComplexRule {
 	return cr | ComplexRule(GenusIsChanges)
 }
-func (cr ComplexRule) SetIsPersonChanging() ComplexRule {
+func (cr ComplexRule) OnPersonChanging() ComplexRule {
 	return cr | ComplexRule(PersonIsChanges)
 }
-func (cr ComplexRule) SetIsTimeChanging() ComplexRule {
+func (cr ComplexRule) OnTimeChanging() ComplexRule {
 	return cr | ComplexRule(TimeIsChanges)
 }
-func (cr ComplexRule) SetIsCaseChanging() ComplexRule {
+func (cr ComplexRule) OnCaseChanging() ComplexRule {
 	return cr | ComplexRule(CaseIsChanges)
 }
+
 func (cr ComplexRule) SetHasHomonym() ComplexRule {
 	return cr | ComplexRule(WordHasHomonym)
 }
@@ -160,7 +168,7 @@ func (cr ComplexRule) SetNumbersIsSingle() ComplexRule {
 func (cr ComplexRule) SetNumbersIsPlural() ComplexRule {
 	return cr | ComplexRule(NumbersIsPlural<<getDiffBytes(NumbersTypeCategory))
 }
-func (cr ComplexRule) SetPeronFirst() ComplexRule {
+func (cr ComplexRule) SetPersonFirst() ComplexRule {
 	return cr | ComplexRule(PersonFirst<<getDiffBytes(PersonTypeCategory))
 }
 func (cr ComplexRule) SetPersonSecond() ComplexRule {
@@ -195,9 +203,18 @@ func (cr ComplexRule) SetGenusCommon() ComplexRule {
 	return cr | ComplexRule(GenusCommon<<getDiffBytes(GenusTypeCategory))
 }
 
+func (cr ComplexRule) SetPledgeActive() ComplexRule {
+	return cr | ComplexRule(PledgeActive<<getDiffBytes(CaseTypeCategory))
+}
+
+func (cr ComplexRule) SetPledgePassive() ComplexRule {
+	return cr | ComplexRule(PledgePassive<<getDiffBytes(CaseTypeCategory))
+}
+
 func (cr ComplexRule) SetCaseNom() ComplexRule {
 	return cr | ComplexRule(CaseNom<<getDiffBytes(CaseTypeCategory))
 }
+
 func (cr ComplexRule) SetCaseGen() ComplexRule {
 	return cr | ComplexRule(CaseGen<<getDiffBytes(CaseTypeCategory))
 }
