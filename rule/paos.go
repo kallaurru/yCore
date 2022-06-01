@@ -19,6 +19,8 @@ const (
 	PronounPaOS uint32 = 0x80
 	// UnionPaOS союз
 	UnionPaOS uint32 = 0x100
+	// ParticlePaOS частица
+	ParticlePaOS uint32 = 0x200
 )
 
 //IsValidPaosElement проверка на валидность входящих данных
